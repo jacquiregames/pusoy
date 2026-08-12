@@ -1,0 +1,89 @@
+:root {
+  --bg-night: #0b1220;
+  --bg-deep: #060a12;
+  --felt: #123b34;
+  --felt-dark: #0a2622;
+  --felt-light: #185044;
+  --gold: #f2b705;
+  --gold-soft: #f7d774;
+  --magenta: #e8447a;
+  --magenta-soft: #ff7aa8;
+  --teal-neon: #2dd4c4;
+  --cream: #f5efe0;
+  --cream-dim: #d9d2bf;
+  --ink: #0b1220;
+  --danger: #ff5470;
+  --success: #58d68d;
+
+  --font-display: "Bungee", "Verdana", system-ui, sans-serif;
+  --font-body: "Manrope", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Courier New", monospace;
+
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --shadow-deep: 0 20px 60px rgba(0, 0, 0, 0.55);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+ 
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--cream);
+  background: url('/table1.png') center/cover no-repeat fixed;
+  background-size: 100% 100%;
+  background-color: var(--bg-night);
+  overflow-x: hidden;
+}
+ 
+button {
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: var(--magenta);
+  color: var(--cream);
+}
+
+.glow {
+  filter: drop-shadow(0 0 14px rgba(242, 183, 5, 0.7));
+  animation: logo-twinkle 3.2s ease-in-out infinite;
+}
+
+.parol-glow {
+  filter: drop-shadow(0 0 14px rgba(242, 183, 5, 0.7));
+  animation: logo-twinkle 3.2s ease-in-out infinite;
+}
+
+@keyframes logo-twinkle {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(242, 183, 5, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(242, 183, 5, 0.9));
+  }
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--felt-light);
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

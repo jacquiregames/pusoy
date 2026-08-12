@@ -1,0 +1,294 @@
+.play-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 240px;
+  min-width: 300px;
+  justify-content: center;
+  position: relative;
+}
+ 
+/* ================= Sloppy Pile Animations ================= */
+
+.pile {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  perspective: 1200px; /* Enable 3D drama */
+  transform-style: preserve-3d;
+}
+
+.pile-throw {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  will-change: transform, opacity, filter;
+  transition: opacity 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.pile-throw .p-card {
+  position: relative;
+  box-shadow:
+    -3px 5px 12px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Dust Impact for normal throws */
+.pile-throw.fling::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140px;
+  height: 140px;
+  margin: -70px 0 0 -70px;
+  background: radial-gradient(circle, rgba(245, 239, 224, 0.5) 0%, transparent 60%);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  animation: impact-dust 0.4s ease-out 0.35s forwards;
+}
+
+@keyframes impact-dust {
+  0% { transform: scale(0.3); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* A single card landing still deserves a little weight of its own - a much
+   quieter cousin of the power-play shockwave, reserved for singles only
+   (pairs and up already get the full power-play treatment via isPower). */
+.pile-throw.fling:not(.power-play)::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90px;
+  height: 90px;
+  margin: -45px 0 0 -45px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  animation: single-thud-ring 0.45s ease-out 0.32s forwards;
+}
+
+@keyframes single-thud-ring {
+  0% { transform: scale(0.4); opacity: 0.75; border-width: 3px; }
+  100% { transform: scale(1.7); opacity: 0; border-width: 0px; }
+}
+
+/* Flying in (Normal) */
+.pile-throw.fling {
+  animation: pileFling 0.55s cubic-bezier(0.15, 0.95, 0.25, 1.15) backwards;
+}
+
+@keyframes pileFling {
+  0% {
+    /* Locked to var(--lz), increased scale from 1.6 to 2 to compensate */
+    transform: translate(var(--fx), var(--fy)) translateZ(var(--lz)) rotate(var(--fr)) scale(2) rotateX(45deg) rotateY(15deg);
+    opacity: 0;
+    filter: drop-shadow(0 20px 20px rgba(0,0,0,0.3)) blur(3px);
+  }
+  60% {
+    opacity: 1;
+    filter: drop-shadow(-3px 8px 12px rgba(0,0,0,0.3)) blur(0px);
+  }
+  100% {
+    /* Locked to var(--lz) */
+    transform: translate(var(--lx), var(--ly)) translateZ(var(--lz)) rotate(var(--lr)) scale(1) rotateX(0deg) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+/* Settling into place when another card lands on top */
+.pile-throw.settle {
+  animation: pileSettle 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+@keyframes pileSettle {
+  0% {
+    transform: translate(var(--lx), var(--ly)) translateZ(var(--lz)) rotate(calc(var(--lr) - 6deg)) scale(1.08) translateY(10px);
+    filter: brightness(1.2);
+  }
+  50% {
+    transform: translate(var(--lx), var(--ly)) translateZ(var(--lz)) rotate(calc(var(--lr) + 2deg)) scale(0.98) translateY(-2px);
+  }
+  100% {
+    transform: translate(var(--lx), var(--ly)) translateZ(var(--lz)) rotate(var(--lr)) scale(1) translateY(0);
+    filter: brightness(1);
+  }
+}
+ 
+/* ================= Power Play Insanity ================= */
+.pile-throw.fling.power-play {
+  animation: pileFlingPower 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.3) backwards;
+}
+
+@keyframes pileFlingPower {
+  0% {
+    /* Locked to var(--lz), increased scale from 3 to 4 */
+    transform: translate(var(--fx), var(--fy)) translateZ(var(--lz)) rotate(calc(var(--fr) - 180deg)) scale(4) rotateX(70deg) translateY(-80px);
+    opacity: 0;
+    filter: drop-shadow(0 0 60px var(--teal-neon)) blur(6px);
+  }
+  40% {
+    opacity: 1;
+    filter: drop-shadow(0 0 80px var(--magenta)) blur(0px);
+    /* Locked to var(--lz), increased scale from 1.8 to 2 */
+    transform: translate(calc(var(--lx)*0.5 + var(--fx)*0.5), calc(var(--ly)*0.5 + var(--fy)*0.5)) translateZ(var(--lz)) rotate(calc(var(--lr) - 45deg)) scale(2) rotateX(20deg);
+  }
+  85% {
+    /* Locked to var(--lz) */
+    transform: translate(var(--lx), var(--ly)) translateZ(var(--lz)) rotate(calc(var(--lr) + 8deg)) scale(0.95);
+  }
+  100% {
+    /* Locked to var(--lz) */
+    transform: translate(var(--lx), var(--ly)) translateZ(var(--lz)) rotate(var(--lr)) scale(1) rotateX(0deg);
+    opacity: 1;
+    filter: drop-shadow(-5px 10px 15px rgba(0,0,0,0.6));
+  }
+}
+
+.pile-throw.fling.power-play::before {
+  content: '';
+  position: absolute;
+  inset: -100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 68, 122, 0.7) 0%, transparent 60%);
+  border: 4px solid var(--gold);
+  box-shadow: 0 0 50px var(--magenta), inset 0 0 40px var(--teal-neon);
+  opacity: 0;
+  pointer-events: none;
+  z-index: -2;
+  animation: power-shockwave 0.8s cubic-bezier(0.1, 0.8, 0.2, 1) 0.45s forwards;
+}
+
+@keyframes power-shockwave {
+  0% { transform: scale(0.1); opacity: 1; border-width: 12px; }
+  100% { transform: scale(3.5); opacity: 0; border-width: 0px; }
+}
+
+.pile-throw.power-play::after {
+  content: '';
+  position: absolute;
+  inset: -60px;
+  background: radial-gradient(circle, rgba(232, 68, 122, 0.4) 0%, transparent 60%);
+  border-radius: 50%;
+  z-index: -1;
+  pointer-events: none;
+  animation: powerGlowPulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes powerGlowPulse {
+  0% { transform: scale(0.9); opacity: 0.2; filter: brightness(0.8); }
+  100% { transform: scale(1.4); opacity: 0.8; filter: brightness(1.2); }
+}
+
+.pile-throw.fling.power-play .p-card {
+  animation: power-card-flash 0.8s ease-out backwards;
+}
+
+@keyframes power-card-flash {
+  0%, 40% { filter: brightness(2.5) contrast(1.5); }
+  100% { filter: brightness(1) contrast(1); }
+}
+ 
+/* ================= Power Play Announcer Text ================= */
+
+.power-popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  
+  /* Dramatically different fighting-game font */
+  font-family: "Bangers", var(--font-display);
+  font-size: 6.5rem;
+  font-weight: 400; /* Bangers is naturally thick */
+  color: #fff;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: 4px;
+  
+  /* Deep 3D extrusion shadow + ambient glow */
+  -webkit-text-stroke: 2px var(--magenta);
+  text-shadow: 
+    0px 3px 0px var(--magenta),
+    0px 6px 0px #ab1644,
+    0px 9px 0px #5e0822,
+    0px 12px 20px rgba(232, 68, 122, 0.9),
+    0px 0px 50px rgba(255, 122, 168, 0.8);
+    
+  pointer-events: none;
+  z-index: 1000;
+  animation: powerPopupAnim 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.power-popup--unbeatable {
+  -webkit-text-stroke: 2px var(--teal-neon);
+  text-shadow: 
+    0px 3px 0px var(--teal-neon),
+    0px 6px 0px #0e6b62,
+    0px 9px 0px #063d37,
+    0px 12px 20px rgba(45, 212, 196, 0.9),
+    0px 0px 50px rgba(122, 255, 240, 0.8);
+}
+
+@keyframes powerPopupAnim {
+  0% { 
+    transform: translate(-50%, -20%) scale(0.1) rotate(-20deg); 
+    opacity: 0; 
+  }
+  15% { 
+    /* Massive overshoot punch-in */
+    transform: translate(-50%, -50%) scale(1.3) rotate(8deg); 
+    opacity: 1; 
+  }
+  25% { 
+    /* Recoil */
+    transform: translate(-50%, -50%) scale(0.95) rotate(-3deg); 
+  }
+  35% { 
+    /* Settle */
+    transform: translate(-50%, -52%) scale(1) rotate(0deg); 
+  }
+  85% { 
+    /* Slow upwards drift reading time */
+    transform: translate(-50%, -60%) scale(1.05) rotate(0deg); 
+    opacity: 1;
+    filter: blur(0px);
+  }
+  100% { 
+    /* Violent rip-away */
+    transform: translate(-50%, -85%) scale(1.6) rotate(12deg); 
+    opacity: 0; 
+    filter: blur(10px); 
+  }
+}
+
+/* ================= Trick Sweep (pile clears when someone wins it) ================= */
+.pile.pile--sweeping .pile-throw {
+  animation: pileSweepOut 0.42s cubic-bezier(0.4, 0, 0.7, 0.3) forwards;
+}
+
+@keyframes pileSweepOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--lx), calc(var(--ly) + 160px)) translateZ(var(--lz)) rotate(calc(var(--lr) + 14deg)) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pile.pile--sweeping .pile-throw {
+    animation: none;
+    opacity: 0;
+  }
+}

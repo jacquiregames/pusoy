@@ -1,0 +1,139 @@
+.table-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+  overflow: hidden; 
+}
+
+.btn--sm {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+}
+
+.table-felt {
+  flex: 1;
+  position: relative;
+  z-index: 10; 
+  margin: 0;
+  min-height: 360px;
+}
+
+.table-felt__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+ 
+.table-header {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
+.table-header__actions {
+  display: flex;
+  gap: 8px;
+}
+ 
+/* Add this base class back! */
+.seat-slot {
+  position: absolute;
+  z-index: 10;
+}
+
+.seat-slot--left {
+  top: 15px;
+  left: 4vw;
+}
+
+.seat-slot--right {
+  top: 15px;
+  right: 4vw;
+}
+
+.seat-slot--top {
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.log-drawer {
+  position: fixed;
+  right: 18px;
+  top: 50vh;
+  bottom: 70px;
+  width: 260px;
+  background: rgba(6, 12, 20, 0.85);
+  border: 1px solid rgba(245, 239, 224, 0.15);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  overflow-y: auto;
+  z-index: 50;
+  box-shadow: var(--shadow-deep);
+}
+
+.log-drawer h3 {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--cream-dim);
+}
+
+.log-drawer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log-drawer__row {
+  font-size: 0.78rem;
+  color: var(--cream-dim);
+  line-height: 1.4;
+  border-left: 2px solid rgba(245, 239, 224, 0.15);
+  padding-left: 8px;
+}
+
+.log-drawer__row--finish {
+  border-color: var(--gold);
+  color: var(--gold-soft);
+}
+.log-drawer__row--play {
+  border-color: var(--teal-neon);
+}
+.log-drawer__row--pass {
+  border-color: rgba(245, 239, 224, 0.15);
+  opacity: 0.7;
+}
+
+@media (max-width: 720px) {
+  .table-felt {
+    margin: 6px 10px;
+  }
+  .log-drawer {
+    display: none;
+  }
+}
+
+.player-hand-wrap {
+  position: relative;
+  z-index: 20;
+}
+
+.pass-bubble--you {
+  top: -46px;
+}
+
+.finish-medal--you {
+  top: -84px;
+  font-size: 3rem;
+}
