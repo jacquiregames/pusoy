@@ -82,8 +82,7 @@ async def ws_endpoint(websocket: WebSocket):
                     player = room.get_player(player_id)
                     if not player or not player.is_host:
                         raise GameError("Only the host can start the game.")
-                    mode = int(msg.get("mode"))
-                    room.start_game(mode)
+                    room.start_game()
                     await manager.broadcast(room_code)
                     manager.trigger_bot_turns(room_code)
 
@@ -151,4 +150,3 @@ if __name__ == "__main__":
     port = 3000
     print(f"\nPusoy Dos server starting — players on your LAN connect to: ws://{local_ip}:{port}/ws\n")
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
-

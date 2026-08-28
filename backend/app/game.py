@@ -44,7 +44,7 @@ class GameRoom:
 
     def __init__(self, code: str):
         self.code = code
-        self.mode: Optional[int] = None  # 3 or 4
+        self.mode: Optional[int] = None  # Always 3
         self.players: List[Player] = []
         self.phase = "lobby"  # lobby | playing | finished
         self.current_turn_idx = 0
@@ -61,7 +61,7 @@ class GameRoom:
     def add_player(self, name: str) -> Player:
         if self.phase != "lobby":
             raise GameError("Game already in progress.")
-        if len(self.players) >= 4:
+        if len(self.players) >= 3:
             raise GameError("Room is full.")
         if any(p.name.lower() == name.lower() for p in self.players):
             raise GameError("That name is already taken in this room.")
@@ -74,7 +74,7 @@ class GameRoom:
     def add_bot(self) -> Player:
         if self.phase != "lobby":
             raise GameError("Game already in progress.")
-        if len(self.players) >= 4:
+        if len(self.players) >= 3:
             raise GameError("Room is full.")
         bot_number = sum(1 for p in self.players if p.is_bot) + 1
         player = Player(id=f"bot-{uuid.uuid4()}", name=f"Bot{bot_number}", seat=len(self.players), is_bot=True)
@@ -106,20 +106,18 @@ class GameRoom:
 
     # ---------- dealing ----------
 
-    def start_game(self, mode: int):
-        if mode not in (3, 4):
-            raise GameError("Mode must be 3 or 4 players.")
-        if len(self.players) != mode:
-            raise GameError(f"Need exactly {mode} players to start this mode ({len(self.players)} seated).")
+    def start_game(self):
+        if len(self.players) != 3:
+            raise GameError("Need exactly 3 players to start.")
 
         deck = build_deck()
         random.shuffle(deck)
-        hand_size = 17 if mode == 3 else 13
+        hand_size = 17
         for p in self.players:
             p.hand = sorted(deck[: hand_size], key=lambda c: c.value)
             deck = deck[hand_size:]
 
-        self.mode = mode
+        self.mode = 3
         self.phase = "playing"
         self.last_play = None
         self.last_play_player_id = None
@@ -231,9 +229,6 @@ class GameRoom:
                 self._push_log("finish", f"{last_p.name} finishes last.", playerId=last_p.id)
                 return
         elif shape != FIVE and is_unbeatable(cards):
-            # QoL: this play can never be beaten - don't make everyone else
-            # sit through a turn they can't win. Reset the trick and hand
-            # the lead straight back to the player who played it.
             self.last_play = None
             self.last_play_player_id = None
             self.pass_count = 0
@@ -249,9 +244,6 @@ class GameRoom:
     # ---------- computer players ----------
 
     def bot_take_turn(self, player_id: str):
-        """Play a single turn on behalf of a computer player: figure out the
-        best legal move and either play_cards() or pass_turn() exactly as a
-        human would, going through the same validated code paths."""
         player = self.get_player(player_id)
         if not player or not player.is_bot:
             raise GameError("Not a computer player.")
@@ -268,13 +260,8 @@ class GameRoom:
 
     def _choose_bot_play(self, player: Player) -> Optional[List[Card]]:
         if self.last_play is None:
-            # Bot is leading a fresh trick. Gather all possible valid plays.
             candidates: List[List[Card]] = []
-            
-            # Singles
             candidates.extend([[c] for c in player.hand])
-            
-            # Pairs, Triples, Fours
             by_rank: Dict[str, List[Card]] = {}
             for c in player.hand:
                 by_rank.setdefault(c.rank, []).append(c)
@@ -285,7 +272,6 @@ class GameRoom:
                 if n >= 3: candidates.extend(list(combo) for combo in itertools.combinations(group, 3))
                 if n == 4: candidates.append(list(group))
                 
-            # Fives
             if len(player.hand) >= 5:
                 for combo in itertools.combinations(player.hand, 5):
                     try:
@@ -294,21 +280,16 @@ class GameRoom:
                     except HandError:
                         pass
                         
-            # If very first play of game, the play MUST include the absolute lowest card
             if not self.any_play_made:
                 lowest_card = min(player.hand, key=lambda c: c.value)
                 candidates = [c for c in candidates if lowest_card.code() in {x.code() for x in c}]
                 
-            # Pick a random shape size to play (e.g. decide to drop a pair vs drop a 5-card hand)
             lengths_available = list({len(c) for c in candidates})
             chosen_len = random.choice(lengths_available)
             options = [c for c in candidates if len(c) == chosen_len]
-            
-            # Play the lowest-value combination of that chosen size to conserve strong cards
             options.sort(key=cmp_to_key(compare))
             return options[0]
 
-        # Responding logic
         required = len(self.last_play)
         if len(player.hand) < required:
             return None
@@ -348,7 +329,6 @@ class GameRoom:
         self.current_turn_idx = self._next_unfinished_idx(self.current_turn_idx)
 
         if self.pass_count >= unfinished_count - 1:
-            # everyone else passed - the last player to play leads a brand new trick
             self.last_play = None
             self.last_play_player_id = None
             self.pass_count = 0
@@ -385,4 +365,3 @@ class GameRoom:
 def _card_label(card: Card) -> str:
     suit_symbol = {"D": "♦", "C": "♣", "H": "♥", "S": "♠"}[card.suit]
     return f"{card.rank}{suit_symbol}"
-
