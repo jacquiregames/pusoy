@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import type { CardData } from "../types";
 import "./PlayingCard.css";
@@ -16,10 +17,18 @@ interface Props {
 export default function PlayingCard({ card, faceDown, selected, disabled, size = "md", style, className = "", onClick }: Props) {
   const isBack = faceDown || !card;
 
+  const [cbIndex, setCbIndex] = useState(() => localStorage.getItem("pusoy-cb") || "1");
+
+  useEffect(() => {
+    const handler = () => setCbIndex(localStorage.getItem("pusoy-cb") || "1");
+    window.addEventListener("pusoy-cb-changed", handler);
+    return () => window.removeEventListener("pusoy-cb-changed", handler);
+  }, []);
+
   const getCardImage = () => {
-    if (isBack) return "/cards/cardback.png";
-    const suitName = { D: "diamonds", C: "clubs", H: "hearts", S: "spades" }[card.suit];
-    const rankName = { A: "ace", J: "jack", Q: "queen", K: "king" }[card.rank] || card.rank;
+    if (isBack) return `/cardback/cardback${cbIndex}.png`;
+    const suitName = { D: "diamonds", C: "clubs", H: "hearts", S: "spades" }[card!.suit];
+    const rankName = { A: "ace", J: "jack", Q: "queen", K: "king" }[card!.rank] || card!.rank;
     return `/cards/${rankName}_of_${suitName}.png`;
   };
 

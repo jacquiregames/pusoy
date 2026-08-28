@@ -84,7 +84,7 @@ export function useGameSocket() {
     }
   }, [ensureSocket]);
 
-  const start = useCallback((mode: 3 | 4) => send({ type: "start", mode }), [send]);
+  const start = useCallback(() => send({ type: "start" }), [send]);
   const addBot = useCallback(() => send({ type: "add_bot" }), [send]);
   const removeBot = useCallback((botId: string) => send({ type: "remove_bot", botId }), [send]);
   const play = useCallback((cards: string[]) => send({ type: "play", cards }), [send]);

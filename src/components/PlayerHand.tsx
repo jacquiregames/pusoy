@@ -134,10 +134,6 @@ export default function PlayerHand({ cards, isYourTurn, mustLead, requiredCount,
   return (
     <div className={`player-hand ${isYourTurn ? "player-hand--your-turn" : ""} ${isLowCards ? "player-hand--low-cards" : ""}`}>
       <div className="player-hand__controls">
-        <div className={`turn-indicator-pill ${isYourTurn ? "turn-indicator-pill--you" : ""}`}>
-          {isYourTurn ? "Your turn" : `${currentTurnName ?? "…"}'s turn`}
-        </div>
-
         <div className="sort-toggle-container">
           <button className={`sort-btn ${sortBy === "rank" ? "active" : ""}`} onClick={() => setSortBy("rank")}>Rank</button>
           <button className={`sort-btn ${sortBy === "suit" ? "active" : ""}`} onClick={() => setSortBy("suit")}>Suit</button>
@@ -176,15 +172,6 @@ export default function PlayerHand({ cards, isYourTurn, mustLead, requiredCount,
       <div className="player-hand__actions">
         {isYourTurn ? (
           <>
-            <span className="player-hand__hint">
-              {mustPass
-                ? "You can't beat that — Pass"
-                : requiredCount
-                ? `Beat the table: play exactly ${requiredCount} card${requiredCount > 1 ? "s" : ""}`
-                : mustLead
-                ? "You're leading — play a single, pair, triple, four of a kind, or 5-card hand"
-                : "Play a single, pair, triple, four of a kind, or 5-card hand"}
-            </span>
             <div className="player-hand__buttons">
               <button
                 className={`btn btn--ghost ${mustPass ? "btn--pass-urgent" : ""}`}

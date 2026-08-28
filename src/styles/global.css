@@ -38,7 +38,7 @@ body {
   margin: 0;
   font-family: var(--font-body);
   color: var(--cream);
-  background: url('/table1.png') center/cover no-repeat fixed;
+  background: url('/tables/table1.png') center/cover no-repeat fixed;
   background-size: 100% 100%;
   background-color: var(--bg-night);
   overflow-x: hidden;

@@ -51,17 +51,16 @@ export function JoinScreen({ status, onJoin }: JoinProps) {
 
 interface RoomLobbyProps {
   state: GameState;
-  onStart: (mode: 3 | 4) => void;
+  onStart: () => void;
   onAddBot: () => void;
   onRemoveBot: (botId: string) => void;
   onLeave: () => void;
 }
 
 export function RoomLobby({ state, onStart, onAddBot, onRemoveBot, onLeave }: RoomLobbyProps) {
-  const [mode, setMode] = useState<3 | 4>(3);
   const you = state.players.find((p) => p.id === state.yourId);
-  const canStart = you?.isHost && state.players.length === mode;
-  const emptySlots = Math.max(0, mode - state.players.length);
+  const canStart = you?.isHost && state.players.length === 3;
+  const emptySlots = Math.max(0, 3 - state.players.length);
 
   return (
     <div className="join-screen">
@@ -117,21 +116,9 @@ export function RoomLobby({ state, onStart, onAddBot, onRemoveBot, onLeave }: Ro
           </ul>
 
           {you?.isHost ? (
-            <>
-              <div className="lobby-mode-select">
-                <button className={`mode-btn ${mode === 3 ? "mode-btn--active" : ""}`} onClick={() => setMode(3)}>
-                  <strong>3 Players</strong>
-                  <span>17 cards each</span>
-                </button>
-                <button className={`mode-btn ${mode === 4 ? "mode-btn--active" : ""}`} onClick={() => setMode(4)}>
-                  <strong>4 Players</strong>
-                  <span>13 cards each</span>
-                </button>
-              </div>
-              <button className="btn btn--gold join-submit" disabled={!canStart} onClick={() => onStart(mode)}>
-                {canStart ? "Deal the cards" : `Need exactly ${mode} players seated`}
-              </button>
-            </>
+            <button className="btn btn--gold join-submit" style={{ marginTop: '16px' }} disabled={!canStart} onClick={() => onStart()}>
+              {canStart ? "Deal the cards" : `Need exactly 3 players seated`}
+            </button>
           ) : (
             <p className="lobby-waiting">Waiting for the host to start the game…</p>
           )}

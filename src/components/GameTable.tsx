@@ -17,13 +17,23 @@ interface Props {
 export default function GameTable({ state, onPlay, onPass, onNewRound, onLeave }: Props) {
   const [logOpen, setLogOpen] = useState(false); 
   
-  const [bgIndex, setBgIndex] = useState<1 | 2 | 3>(() => {
+  const [bgIndex, setBgIndex] = useState<1 | 2 | 3 | 4>(() => {
     const saved = localStorage.getItem("pusoy-bg");
     if (saved === "2") return 2;
     if (saved === "3") return 3;
+    if (saved === "4") return 4;
     return 1;
   });
   
+  const [cbIndex, setCbIndex] = useState<1 | 2 | 3 | 4 | 5>(() => {
+    const saved = localStorage.getItem("pusoy-cb");
+    if (saved === "2") return 2;
+    if (saved === "3") return 3;
+    if (saved === "4") return 4;
+    if (saved === "5") return 5;    
+    return 1;
+  });
+
   const you = state.players.find((p) => p.id === state.yourId);
 
   const seatedOpponents = useMemo(() => {
@@ -33,16 +43,10 @@ export default function GameTable({ state, onPlay, onPass, onNewRound, onLeave }
     for (let i = 1; i < n; i++) {
       ordered.push(state.players[(yourSeat + i) % n]);
     }
-    if (n === 3) {
-      return [
-        { player: ordered[0], position: "left" as const },
-        { player: ordered[1], position: "right" as const },
-      ];
-    }
+    
     return [
       { player: ordered[0], position: "left" as const },
-      { player: ordered[1], position: "top" as const },
-      { player: ordered[2], position: "right" as const },
+      { player: ordered[1], position: "right" as const },
     ];
   }, [state.players, you]);
 
@@ -72,16 +76,27 @@ export default function GameTable({ state, onPlay, onPass, onNewRound, onLeave }
   }, [state.log, state.players]);
 
   useEffect(() => {
-    document.body.style.backgroundImage = `url('/table${bgIndex}.png')`;
+    document.body.style.backgroundImage = `url('/tables/table${bgIndex}.png')`;
     localStorage.setItem("pusoy-bg", bgIndex.toString());
   }, [bgIndex]);
 
+  useEffect(() => {
+    localStorage.setItem("pusoy-cb", cbIndex.toString());
+    window.dispatchEvent(new Event("pusoy-cb-changed"));
+  }, [cbIndex]);
+
   return (
     <div className="table-screen">
+      {isYourTurn && (
+        <img src="/yourturn.png" alt="Your turn" className="yourturn-indicator" />
+      )}
       <header className="table-header">
         <div className="table-header__actions">
-          <button className="btn btn--ghost btn--sm" onClick={() => setBgIndex((v) => (v === 1 ? 2 : v === 2 ? 3 : 1))}>
+          <button className="btn btn--ghost btn--sm" onClick={() => setBgIndex((v) => (v === 1 ? 2 : v === 2 ? 3 : v === 3 ? 4 : 1))}>
             Table
+          </button>
+          <button className="btn btn--ghost btn--sm" onClick={() => setCbIndex((v) => (v === 1 ? 2 : v === 2 ? 3 : v === 3 ? 4 : v === 4 ? 5 : 1))}>
+            Cardback
           </button>
           <button className="btn btn--ghost btn--sm" onClick={() => setLogOpen((v) => !v)}>
             {logOpen ? "Hide log" : "Show log"}
@@ -93,19 +108,22 @@ export default function GameTable({ state, onPlay, onPass, onNewRound, onLeave }
       </header>
 
       <div className={`table-felt table-felt--${state.mode}p`}>
-        {seatedOpponents.map(({ player, position }) => (
-          <div key={player.id} className={`seat-slot seat-slot--${position}`}>
-            <Opponent
-              player={player}
-              isTurn={state.currentTurnPlayerId === player.id}
-              position={position}
-              passSignal={passFlash?.playerId === player.id ? passFlash.key : null}
-              finishSignal={
-                finishFlash?.playerId === player.id ? { rank: finishFlash.rank, key: finishFlash.key } : null
-              }
-            />
-          </div>
-        ))}
+        {seatedOpponents.map(({ player, position }) => {
+          if (!player) return null; // Safe guard
+          return (
+            <div key={player.id} className={`seat-slot seat-slot--${position}`}>
+              <Opponent
+                player={player}
+                isTurn={state.currentTurnPlayerId === player.id}
+                position={position}
+                passSignal={passFlash?.playerId === player.id ? passFlash.key : null}
+                finishSignal={
+                  finishFlash?.playerId === player.id ? { rank: finishFlash.rank, key: finishFlash.key } : null
+                }
+              />
+            </div>
+          );
+        })}
 
         <div className="table-felt__center">
           <PlayArea state={state} />

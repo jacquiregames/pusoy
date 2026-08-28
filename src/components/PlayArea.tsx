@@ -28,6 +28,18 @@ interface Props {
 
 let globalThrowCounter = 0;
 
+/** Extracts the true "top" card of a straight (factoring in wrap-arounds) */
+const getStraightTopCard = (cards: CardData[]): CardData => {
+  const r = ["3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2"];
+  const rankIdxs = cards.map(c => r.indexOf(c.rank)).sort((a, b) => a - b);
+  const key = rankIdxs.join(',');
+  
+  if (key === "0,1,2,11,12") return cards.find(c => c.rank === "5")!;
+  if (key === "0,1,2,3,12") return cards.find(c => c.rank === "6")!;
+  
+  return cards.reduce((max, c) => r.indexOf(c.rank) > r.indexOf(max.rank) ? c : max, cards[0]);
+};
+
 const getHandName = (cards: CardData[]): string | null => {
   if (cards.length === 2) return "Pair!";
   if (cards.length === 3) return "Three of a Kind!";
@@ -49,23 +61,17 @@ const getHandName = (cards: CardData[]): string | null => {
       rankIdxs.join(',') === "0,1,2,11,12" ||
       rankIdxs.join(',') === "0,1,2,3,12";
 
-    if (isStraight && isFlush) return "Straight Flush!!!";
+    if (isStraight && isFlush) {
+      const top = getStraightTopCard(cards);
+      return `Straight Flush to the ${top.rank}!!!`;
+    }
     if (isFlush) return "Flush!";
-    if (isStraight) return "Straight!";
+    if (isStraight) {
+      const top = getStraightTopCard(cards);
+      return `Straight to the ${top.rank}!`;
+    }
   }
   return null;
-};
-
-/** Extracts the true "top" card of a straight (factoring in wrap-arounds) */
-const getStraightTopCard = (cards: CardData[]): CardData => {
-  const r = ["3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2"];
-  const rankIdxs = cards.map(c => r.indexOf(c.rank)).sort((a, b) => a - b);
-  const key = rankIdxs.join(',');
-  
-  if (key === "0,1,2,11,12") return cards.find(c => c.rank === "5")!;
-  if (key === "0,1,2,3,12") return cards.find(c => c.rank === "6")!;
-  
-  return cards.reduce((max, c) => r.indexOf(c.rank) > r.indexOf(max.rank) ? c : max, cards[0]);
 };
 
 /** Seeded pseudo-random generator so re-renders of the same play don't jitter around. */
@@ -108,14 +114,8 @@ export default function PlayArea({ state }: Props) {
     const n = state.players.length;
     const diff = (other.seat - you.seat + n) % n;
     
-    if (n === 3) {
-       if (diff === 1) return { x: -420, y: -240, rot: -42 }; 
-       if (diff === 2) return { x: 420, y: -240, rot: 42 };   
-    } else {
-       if (diff === 1) return { x: -420, y: -240, rot: -42 }; 
-       if (diff === 2) return { x: 0, y: -400, rot: 15 };     
-       if (diff === 3) return { x: 420, y: -240, rot: 42 };   
-    }
+    if (diff === 1) return { x: -420, y: -240, rot: -42 }; 
+    if (diff === 2) return { x: 420, y: -240, rot: 42 };   
     return { x: 0, y: -300, rot: 15 };
   };
 
@@ -173,19 +173,24 @@ export default function PlayArea({ state }: Props) {
       }
 
       let handText = getHandName(currentCards);
-      
+       
       // "With the Diamond" logic
       const prevCards = prevPlayRef.current;
+
       if (prevCards && currentCards.length === prevCards.length) {
-        if (currentCards.length === 2 && currentCards[0].rank === prevCards[0].rank) {
-          // Same-rank pair beaten by the diamond
+        if (
+          (currentCards.length === 1 || currentCards.length === 2) &&
+          currentCards[0].rank === prevCards[0].rank
+        ) {
+          // Same-rank single or pair beaten by the diamond
           if (currentCards.some(c => c.suit === 'D')) {
             handText = "WITH THE DIAMOND!";
           }
-        } else if (currentCards.length === 5 && handText === "Straight!") {
+        } else if (currentCards.length === 5 && handText && handText.includes("Straight")) {
           // Same-rank straight beaten by the diamond
           const currentTop = getStraightTopCard(currentCards);
           const prevTop = getStraightTopCard(prevCards);
+
           if (currentTop.rank === prevTop.rank && currentTop.suit === 'D') {
             handText = "WITH THE DIAMOND!";
           }
@@ -199,7 +204,12 @@ export default function PlayArea({ state }: Props) {
       // Update ref for the next turn to compare against
       prevPlayRef.current = currentCards;
 
-      const newThrow = buildThrow(playId, state.lastPlay!.playerId, currentCards, isPower);
+      const newThrow = buildThrow(
+        playId,
+        state.lastPlay!.playerId,
+        currentCards,
+        isPower || !!handText
+      );
       return [...prev.map(p => ({ ...p, isNew: false })), newThrow].slice(-10);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -284,10 +294,7 @@ export default function PlayArea({ state }: Props) {
   return (
     <div className="play-area">
       <div className={`pile ${sweeping ? "pile--sweeping" : ""}`}>
-        {pile.map((t, idx) => {
-           const dimming = Math.max(0.35, 1 - (pile.length - 1 - idx) * 0.15);
-           return renderThrow(t, dimming);
-        })}
+        {pile.map((t) => renderThrow(t, 1))}
       </div>
 
       {unbeatableFlash && (

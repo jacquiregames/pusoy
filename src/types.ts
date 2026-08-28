@@ -33,7 +33,7 @@ export type Phase = "lobby" | "playing" | "finished";
 export interface GameState {
   type: "state";
   roomCode: string;
-  mode: 3 | 4 | null;
+  mode: 3 | null;
   phase: Phase;
   players: PlayerPublic[];
   yourHand: CardData[];
@@ -57,4 +57,3 @@ export interface ErrorMessage {
 }
 
 export type ServerMessage = GameState | JoinedMessage | ErrorMessage;
-
