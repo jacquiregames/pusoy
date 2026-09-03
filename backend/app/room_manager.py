@@ -68,13 +68,36 @@ class RoomManager:
             current = room.current_player()
             if not current.is_bot:
                 return
+                
+            # If the bot is waiting for its unbeatable trick to clear...
+            if room.last_play_player_id == current.id:
+                return
 
             try:
-                room.bot_take_turn(current.id)
+                res = room.bot_take_turn(current.id)
             except GameError:
                 # Shouldn't happen in practice; bail out rather than loop forever.
                 return
             await self.broadcast(room_code)
+            
+            if res == "unbeatable":
+                self.trigger_clear_delay(room_code)
+                return
+
+    def trigger_clear_delay(self, room_code: str):
+        asyncio.create_task(self._clear_delay_task(room_code))
+
+    async def _clear_delay_task(self, room_code: str):
+        await asyncio.sleep(2)
+        room = self.rooms.get(room_code)
+        if room and room.phase == "playing":
+            # clear the trick if it's still theirs
+            if room.last_play_player_id is not None and room.last_play_player_id == room.current_player().id:
+                room.last_play = None
+                room.last_play_player_id = None
+                room.pass_count = 0
+                await self.broadcast(room_code)
+                self.trigger_bot_turns(room_code)
 
     def maybe_delete_room(self, room_code: str = "LAN"):
         room = self.rooms.get(room_code)

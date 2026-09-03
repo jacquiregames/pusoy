@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from functools import cmp_to_key
 from typing import Dict, List, Optional
 
-from .hands import FIVE, HandError, beats, classify, compare, is_unbeatable
+from .hands import FIVE, FiveKind, HandError, beats, classify, compare, is_unbeatable
 from .models import Card, build_deck
 
 
@@ -161,7 +161,7 @@ class GameRoom:
 
     # ---------- gameplay ----------
 
-    def play_cards(self, player_id: str, card_codes: List[str]):
+    def play_cards(self, player_id: str, card_codes: List[str]) -> str:
         if self.phase != "playing":
             raise GameError("Game isn't in progress.")
         player = self.get_player(player_id)
@@ -169,6 +169,8 @@ class GameRoom:
             raise GameError("Unknown player.")
         if self.current_player().id != player_id:
             raise GameError("It isn't your turn.")
+        if self.last_play_player_id == player_id:
+            raise GameError("Waiting to clear the trick...")
         if not card_codes:
             raise GameError("Select at least one card to play.")
 
@@ -185,7 +187,7 @@ class GameRoom:
             raise GameError("Duplicate card in selection.")
 
         try:
-            shape, _ = classify(cards)
+            shape, five_kind = classify(cards)
         except HandError as e:
             raise GameError(str(e))
 
@@ -212,7 +214,19 @@ class GameRoom:
         self.last_play_player_id = player_id
         self.pass_count = 0
         self.any_play_made = True
-        self._push_log("play", f"{player.name} played {', '.join(_card_label(c) for c in cards)}", playerId=player.id, cards=[c.code() for c in cards])
+
+        shape_name = {
+            "SINGLE": "Single",
+            "PAIR": "Pair",
+            "TRIPLE": "Three of a Kind",
+            "FOUR": "Four of a Kind",
+        }.get(shape, shape)
+        
+        if shape == "FIVE" and five_kind:
+            shape_name = five_kind.name.replace("_", " ").title()
+
+        cards_str = ' '.join(_card_label(c) for c in cards)
+        self._push_log("play", f"{player.name} played a {shape_name}:\n{cards_str}", playerId=player.id, cards=[c.code() for c in cards])
 
         just_finished = False
         if not player.hand:
@@ -229,21 +243,23 @@ class GameRoom:
                 self._push_log("finish", f"{last_p.name} finishes last.", playerId=last_p.id)
                 return
         elif shape != FIVE and is_unbeatable(cards):
-            self.last_play = None
-            self.last_play_player_id = None
+            self.last_play = cards
+            self.last_play_player_id = player_id
             self.pass_count = 0
             self._push_log(
                 "unbeatable",
-                f"{player.name}'s play can't be beaten — turn comes right back to them.",
+                f"{player.name}'s {shape_name} can't be beaten!\n{cards_str}",
                 playerId=player.id,
                 cards=[c.code() for c in cards],
             )
-            return
+            return "unbeatable"
+            
         self.current_turn_idx = self._next_unfinished_idx(self.current_turn_idx)
+        return "normal"
 
     # ---------- computer players ----------
 
-    def bot_take_turn(self, player_id: str):
+    def bot_take_turn(self, player_id: str) -> str:
         player = self.get_player(player_id)
         if not player or not player.is_bot:
             raise GameError("Not a computer player.")
@@ -254,9 +270,9 @@ class GameRoom:
 
         play = self._choose_bot_play(player)
         if play is None:
-            self.pass_turn(player_id)
+            return self.pass_turn(player_id)
         else:
-            self.play_cards(player_id, [c.code() for c in play])
+            return self.play_cards(player_id, [c.code() for c in play])
 
     def _choose_bot_play(self, player: Player) -> Optional[List[Card]]:
         if self.last_play is None:
@@ -312,11 +328,13 @@ class GameRoom:
         winners.sort(key=cmp_to_key(compare))
         return winners[0]
 
-    def pass_turn(self, player_id: str):
+    def pass_turn(self, player_id: str) -> str:
         if self.phase != "playing":
             raise GameError("Game isn't in progress.")
         if self.current_player().id != player_id:
             raise GameError("It isn't your turn.")
+        if self.last_play_player_id == player_id:
+            raise GameError("Waiting to clear the trick...")
         if self.last_play is None:
             raise GameError("You're leading the trick — you must play a hand.")
 
@@ -336,6 +354,8 @@ class GameRoom:
             if winner and winner.finished_rank is None:
                 self.current_turn_idx = self.players.index(winner)
             self._push_log("system", f"Everyone passed. {winner.name if winner else ''} leads a new trick.")
+            
+        return "normal"
 
     # ---------- serialization ----------
 

@@ -90,9 +90,12 @@ async def ws_endpoint(websocket: WebSocket):
                     room = manager.get_room(room_code) if room_code else None
                     if not room:
                         raise GameError("Join a table first.")
-                    room.play_cards(player_id, msg.get("cards") or [])
+                    res = room.play_cards(player_id, msg.get("cards") or [])
                     await manager.broadcast(room_code)
-                    manager.trigger_bot_turns(room_code)
+                    if res == "unbeatable":
+                        manager.trigger_clear_delay(room_code)
+                    else:
+                        manager.trigger_bot_turns(room_code)
 
                 elif msg_type == "pass":
                     room = manager.get_room(room_code) if room_code else None
