@@ -6,8 +6,7 @@ interface Props {
   state: GameState;
   onNewRound: () => void;
 }
-
-const MEDALS = ["🥇", "🥈", "🥉", "🎖️"];
+ 
 const NEON_COLORS = ["#2dd4c4", "#ff5470", "#aa3bff", "#f2b705"];
 const CONFETTI_COLORS = ["#f2b705", "#f7d774", "#e8447a", "#2dd4c4", "#f5efe0"];
 
@@ -62,7 +61,7 @@ export default function ResultsOverlay({ state, onNewRound }: Props) {
     <div className="results-overlay">
       {hasWinner && <ConfettiBurst />}
       <div className="results-card">
-        <h2 className="results-title">Round Over</h2>
+        <h2 className="results-title">Game Over</h2>
         <ul className="results-list">
           {ranked.map((p, i) => {
             const color = NEON_COLORS[p.seat % NEON_COLORS.length];
@@ -72,15 +71,20 @@ export default function ResultsOverlay({ state, onNewRound }: Props) {
                 key={p.id}
                 className={p.id === state.yourId ? "results-list__row results-list__row--you" : "results-list__row"}
                 style={{ "--idx": i } as React.CSSProperties}
-              >
+              > 
                 <span
                   className={`results-list__medal ${isWinner ? "results-list__medal--winner" : ""}`}
                   style={{ "--idx": i } as React.CSSProperties}
                 >
-                  {MEDALS[(p.finishedRank ?? 1) - 1] ?? "🂠"}
+                  {p.finishedRank ? (
+                    <img 
+                      src={`/place/${p.finishedRank}.webp`} 
+                      alt={`Place ${p.finishedRank}`} 
+                      style={{ height: '60px', width: 'auto', objectFit: 'contain', display: 'block' }} 
+                    />
+                  ) : "🂠"}
                 </span>
-                <span className="results-list__name" style={{ color, textShadow: `0 0 8px ${color}` }}>{p.name}</span>
-                <span className="results-list__place">#{p.finishedRank}</span>
+                <span className="results-list__name" style={{ color }}>{p.name}</span> 
               </li>
             );
           })}

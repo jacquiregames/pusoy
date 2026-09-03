@@ -1,3 +1,4 @@
+// src/components/GameTable.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameState } from "../types";
 import Opponent from "./Opponent";
@@ -5,6 +6,39 @@ import PlayArea from "./PlayArea";
 import PlayerHand from "./PlayerHand";
 import ResultsOverlay from "./ResultsOverlay";
 import "./GameTable.css";
+
+function formatLogLine(msg: string) {
+  const regex = /(10|[2-9]|[JQKA])([♦♣♥♠])/g;
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+  
+  while ((match = regex.exec(msg)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(msg.substring(lastIndex, match.index));
+    }
+    const suit = match[2];
+    const isRed = suit === '♦' || suit === '♥';
+    parts.push(
+      <span key={match.index} className="log-card-box" style={{ color: isRed ? '#e8447a' : '#0b1220' }}>
+        {match[0]}
+      </span>
+    );
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < msg.length) {
+    parts.push(msg.substring(lastIndex));
+  }
+  return parts.length > 0 ? parts : msg;
+}
+
+function formatLogMessage(msg: string) {
+  return msg.split('\n').map((line, i) => (
+    <div key={i} className={i === 1 ? "log-cards-container" : ""}>
+      {formatLogLine(line)}
+    </div>
+  ));
+}
 
 interface Props {
   state: GameState;
@@ -136,7 +170,7 @@ export default function GameTable({ state, onPlay, onPass, onNewRound, onLeave }
         )}
         {finishFlash?.playerId === state.yourId && (
           <span key={finishFlash.key} className="finish-medal finish-medal--you">
-            {finishFlash.rank === 1 ? "🥇" : finishFlash.rank === 2 ? "🥈" : finishFlash.rank === 3 ? "🥉" : "🎖️"}
+            <img src={`/place/${finishFlash.rank}.webp`} alt={`Place ${finishFlash.rank}`} style={{ height: '64px', width: 'auto', objectFit: 'contain' }} />
           </span>
         )}
         <PlayerHand
@@ -153,12 +187,11 @@ export default function GameTable({ state, onPlay, onPass, onNewRound, onLeave }
       </div>
 
       {logOpen && (
-        <aside className="log-drawer scrollbar-thin">
-          <h3>Table talk</h3>
+        <aside className="log-drawer scrollbar-thin"> 
           <ul>
             {[...state.log].reverse().map((entry, i) => (
               <li key={i} className={`log-drawer__row log-drawer__row--${entry.type}`}>
-                {entry.message}
+                {formatLogMessage(entry.message)}
               </li>
             ))}
           </ul>

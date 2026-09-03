@@ -13,8 +13,10 @@ interface Props {
 
 const NEON_COLORS = ["#2dd4c4", "#ff5470", "#aa3bff", "#f2b705"];
 const LEAVE_ANIM_MS = 320;
-const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
-const medalFor = (rank: number) => MEDALS[rank] ?? "🎖️";
+const medalFor = (rank: number) => (
+  <img src={`/place/${rank}.webp`} alt={`Place ${rank}`} style={{ height: '48px', width: 'auto', objectFit: 'contain' }} />
+);
+ 
 
 export default function Opponent({ player, isTurn, position, passSignal, finishSignal }: Props) {
   const playerColor = NEON_COLORS[player.seat % NEON_COLORS.length];
