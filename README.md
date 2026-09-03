@@ -1,5 +1,7 @@
 # 🃏 Pusoy 
 My LAN Party adaptation of Pusoy with our house rules.
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/1af6d1ca-b272-4351-a382-1703326d12b3" />
+
 <img width="1280" height="598" alt="Screenshot From 2026-08-13 10-36-32" src="https://github.com/user-attachments/assets/35771a64-3e5c-46bb-ada0-5b86f4d860a8" />
 <img width="1280" height="599" alt="Screenshot From 2026-08-13 10-38-40" src="https://github.com/user-attachments/assets/529beb53-c744-4013-bee9-5f1a97a8684a" />
 
