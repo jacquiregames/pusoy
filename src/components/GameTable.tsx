@@ -21,7 +21,8 @@ function formatLogLine(msg: string) {
     const isRed = suit === '♦' || suit === '♥';
     parts.push(
       <span key={match.index} className="log-card-box" style={{ color: isRed ? '#e8447a' : '#0b1220' }}>
-        {match[0]}
+        {match[1]}
+        <span className="log-card-suit">{match[2]}</span>
       </span>
     );
     lastIndex = regex.lastIndex;

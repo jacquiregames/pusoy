@@ -182,6 +182,12 @@
   letter-spacing: -0.5px;
 }
 
+.log-card-suit {
+  font-size: 1.35em; /* Increases the suit size */
+  line-height: 1;
+  margin-left: 2px;
+}
+
 @media (max-width: 720px) {
   .table-felt {
     margin: 6px 10px;
