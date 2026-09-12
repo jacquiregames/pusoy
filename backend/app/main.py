@@ -1,9 +1,12 @@
-from __future__ import annotations
-
+# backend/app/main.py
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles  # <-- Add this
 import logging
 import socket
+import os
+import sys
+
 from .game import GameError
 from .room_manager import manager
 
@@ -17,8 +20,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/")
+# Move your health check to a new path
+@app.get("/api/health")
 def health():
     return {"status": "ok", "service": "pusoy-dos", "rooms": len(manager.rooms)}
 
@@ -133,6 +136,18 @@ async def ws_endpoint(websocket: WebSocket):
                 await manager.broadcast(room_code)
                 manager.maybe_delete_room(room_code)
 
+
+# Setup static file serving for PyInstaller
+# This determines the path to the React 'dist' folder whether running locally or inside the .exe
+if getattr(sys, 'frozen', False):
+    base_dir = sys._MEIPASS # PyInstaller creates this temp folder for bundled assets
+else:
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+dist_dir = os.path.join(base_dir, "dist")
+
+if os.path.isdir(dist_dir):
+    app.mount("/", StaticFiles(directory=dist_dir, html=True), name="static")
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
