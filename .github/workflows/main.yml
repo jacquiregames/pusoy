@@ -1,0 +1,56 @@
+name: Build Windows Executable
+
+on:
+  workflow_dispatch: # Allows you to manually click a "Run" button in Github
+  push:
+    branches:
+      - main # Runs automatically when you push to the main branch
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Build React Frontend
+        run: |
+          pnpm install
+          pnpm run build
+          
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pyinstaller
+
+      - name: Package Executable with PyInstaller
+        run: |
+          # --onefile creates a single .exe
+          # --add-data "dist;dist" embeds the compiled React frontend 
+          # --collect-all uvicorn ensures the server's hidden dependencies are caught
+          pyinstaller --name PusoyServer --onefile --add-data "dist;dist" --collect-all uvicorn run.py
+
+      - name: Upload Executable to GitHub
+        uses: actions/upload-artifact@v6
+        with:
+          name: PusoyServer-Windows
+          path: dist/PusoyServer.exe
