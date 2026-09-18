@@ -1,10 +1,7 @@
 name: Build Windows Executable
 
 on:
-  workflow_dispatch: # Allows you to manually click a "Run" button in Github
-  push:
-    branches:
-      - main # Runs automatically when you push to the main branch
+  workflow_dispatch: # Allows you to manually click a "Run" button in Github 
 
 jobs:
   build-windows:
